@@ -171,7 +171,7 @@ jobs:
       - name: Merge split files
         if: ${{ github.event.inputs.merge_gguf == 'true' }}
         id: merge_files
-        shell: bash
+        shell: pwsh
         run: |
           cd D:\models
           echo "=== Directory contents before merge ==="
@@ -241,26 +241,18 @@ jobs:
       - name: Create release and upload volumes
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ollama-${{ env.MODEL_SLUG }}-${{ env.GGUF_OUTTYPE }}
+          tag_name: ${{ steps.get_base_name.outputs.base_name }}-${{ github.sha }}
           target_commitish: ${{ github.sha }}
-          name: "GGUF for Ollama ${{ inputs.model_name }} (${{ env.GGUF_OUTTYPE }})"
+          name: "GGUF from HF ${{ steps.get_base_name.outputs.base_name }})"
           fail_on_unmatched_files: true
           body: |
-            ## ${{ inputs.model_name }} — ${{ env.GGUF_OUTTYPE }} GGUF
+            ## ${{ steps.get_base_name.outputs.base_name }} GGUF
 
             | Field | Value |
             |---|---|
-            | Ollama model | `${{ inputs.model_name }}` |
-            | Quantization | `${{ env.GGUF_OUTTYPE }}` |
+            | Model | `${{ steps.get_base_name.outputs.base_name }}` |
             | Archive format | 7zip split volumes (`${{ inputs.split_size }} MB` each) |
-            | Volume count | ${{ env.VOLUME_COUNT }} files |
 
-            ### How to reassemble
-            Download **all** volume files, then run:
-            ```
-            7z x <archive>.7z.001
-            ```
-            Verify with the included `model-gguf.sha256` checksum file.
           files: D:/volumes/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
